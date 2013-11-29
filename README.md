@@ -1,6 +1,6 @@
 Moberry
 =======
-Irc bot that does silly things when poked.
+Moberry is a female graham cracker irc bot that does silly things when poked.
 
 Moberry is a basic irc bot thats built to be flexible. 
 
