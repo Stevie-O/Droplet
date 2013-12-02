@@ -16,45 +16,57 @@ $VERSION = "1";
 
 my $lastnick = "nobody";
 
+my @button = (
+		"eats muffin",
+		"explodes",
+		"dances ~*w*~",
+);
+
+my @order = (
+	"o7",
+	"Maybe later.",
+	"No."
+);
+
+my @poke = (
+	"pokes",
+	"smacks",
+	"hugs",
+	"bazookas",
+);
+
+my @suggest = (
+	"Sleep.",
+	"Play a video game.",
+	"Read a book.",
+	"Go do that thing you've been putting off for months.",
+	"Give mosai all your mone-wait no.",
+	"Iunno, do whatever you want *w*~",
+);
+
 sub button{
 	my($server, $data, $nick, $mask, $target) = @_;
 	my($target, $text) = $data =~ /^(\S*)\s:(.*)/;
-	my $phrase = int(rand(3));
 	
 	if($text =~ m/^!button/i){
 		$server->command("CTCP $target ACTION presses button");
-		if($phrase == 0){
-			$server->command("CTCP $target ACTION eats muffin");
-		}
-		elsif($phrase == 1){
-			$server->command("CTCP $target ACTION explodes");
-		}
-		elsif($phrase == 2){
-			$server->command("CTCP $target ACTION dances ~*w*~");
-		}
+		my $response = $button[int(rand(scalar(@button)))];
+		$server->command("CTCP $target ACTION $response");
 	}
 	
 	if($text =~ m/^!butten/i){
 		$server->command("CTCP $target ACTION corrects spelling");
 		$server->command("CTCP $target ACTION presses button");
-		if($phrase == 0){
-			$server->command("CTCP $target ACTION eats muffin");
-		}
-		elsif($phrase == 1){
-			$server->command("CTCP $target ACTION explodes");
-		}
-		elsif($phrase == 2){
-			$server->command("CTCP $target ACTION dances ~*w*~");
-		}
+		my $response = $button[int(rand(scalar(@button)))];
+		server->command("CTCP $target ACTION $response");
 	}
-	$phrase = int(rand(3));
 	$lastnick = $nick;
 }
 
 sub identify{
 	my($server, $data, $nick, $mask, $target) = @_;
 	my($target, $text) = $data =~ /^(\S*)\s:(.*)/;
-	my $version = "4.0";
+	my $version = "4.2";
 	
 	if ($text =~ m/^!identify/i) {
 		$server->command("MSG $target I am Moberry, a female graham cracker IRC Bot. Version $version");
@@ -75,20 +87,10 @@ sub last{
 sub order{
 	my($server, $data, $nick, $mask, $target) = @_;
 	my($target, $text) = $data =~ /^(\S*)\s:(.*)/;
-	my $phrase = int(rand(3));
 	
 	if ($text =~ m/!order/i) {
-		if($phrase == 1){
-			$server->command("MSG $target o7");
-		}
-		elsif($phrase == 2){
-			$server->command("MSG $target No.");
-		}
-		else{
-			$server->command("MSG $target Maybe later.");
-		}
-		$phrase = int(rand(3));
-		
+		my $response = $order[int(rand(scalar(@order)))];
+		$server->command("MSG $target $response");
 	}
 	$lastnick = $nick;
 }
@@ -101,16 +103,8 @@ sub poke{
 			$server->command("CTCP $target ACTION hugs $nick");
 		}
 		else{
-			if ($phrase == 0){
-				$server->command("CTCP $target ACTION pokes $nick");
-			}
-			elsif($phrase == 1){
-				$server->command("CTCP $target ACTION smacks $nick");
-			}
-			elsif($phrase == 2){
-				$server->command("CTCP $target ACTION hugs $nick");
-			}
-			$phrase = int(rand(3));
+			my $response = $poke[int(rand(scalar(@poke)))];
+			$server->command("CTCP $target ACTION $response $nick");
 		}
 	} 
 	$lastnick = $nick;
@@ -128,17 +122,11 @@ sub smack{
 sub suggest{
 	my($server, $data, $nick, $mask, $target) = @_;
 	my($target, $text) = $data =~ /^(\S*)\s:(.*)/;
+	my $phrase = int(rand(3));
 	
 	if ($text =~ m/^!suggest/i) {
-		if ($phrase == 0){
-			$server->command("MSG $target Sleep.");
-		}
-		elsif($phrase == 1) {
-			$server->command("MSG $target Play a video game.");
-		}
-		elsif($phrase == 2) {
-			$server->command("MSG $target I dont know, do whatever you want man *3*~");
-		}
+		my $response = $suggest[int(rand(scalar(@suggest)))];
+		$server->command("MSG $target $response");
 		$lastnick = $nick;
 	}
 }
@@ -152,4 +140,11 @@ sub whee{
 	}
 }
 
-Irssi::signal_add('event privmsg', 'moberry');
+Irssi::signal_add('event privmsg', 'button');
+Irssi::signal_add('event privmsg', 'identify');
+Irssi::signal_add('event privmsg', 'last');
+Irssi::signal_add('event privmsg', 'order');
+Irssi::signal_add('event privmsg', 'poke');
+Irssi::signal_add('event privmsg', 'smack');
+Irssi::signal_add('event privmsg', 'suggest');
+Irssi::signal_add('event privmsg', 'whee');
