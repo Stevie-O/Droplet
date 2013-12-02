@@ -71,7 +71,7 @@ sub identify{
 	if ($text =~ m/^!identify/i) {
 		$server->command("MSG $target I am Moberry, a female graham cracker IRC Bot. Version $version");
 		$server->command("MSG $target My commands are as follows:");
-		$server->command("MSG $target !anime, !button, !g, !identify, !last, !order, !poke, !smack, !suggest, !whee");
+		$server->command("MSG $target !anime <search term>, !button, !g <search term>, !identify, !last, !order, !poke, !smack, !suggest, !whee");
 	}
 	$lastnick = $nick;
 }
