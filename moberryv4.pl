@@ -14,6 +14,17 @@ $VERSION = "1";
 	changed 	=> '2013-12-2 03:46 (UTC-8:00)',
 );
 
+sub button;
+sub butten;
+sub identify;
+sub last;
+sub order;
+sub poke;
+sub smack;
+sub suggest;
+sub whee;
+sub help;
+
 my $lastnick = "nobody";
 
 my @button = (
@@ -44,107 +55,130 @@ my @suggest = (
 	"Iunno, do whatever you want *w*~",
 );
 
-sub button{
-	my($server, $data, $nick, $mask, $target) = @_;
+my %dispatch = (
+	'button' => { func => \&button, args => '', desc => 'Mystery button' },
+	'butten' => { func => \&butten, hidden => 1 },
+	'identify' => { func => \&identify, args => '', desc => 'Display version and supported commands' },
+	'last' => { func => \&last, nolast => 1, args => '', help => 'Show the last user to perform a command (other than !last)' },
+	'order' => { func => \&order, args => '', help => '' },
+	'poke' => { func => \&poke, args => '', help => '' },
+	'suggest' => { func => \&suggest, args => '', help => 'Suggest a course of action' },
+	'whee' => { func => \&whee, args => '', help => '' },
+	'help' => { func => \&help, args => ' <command>', help => 'You\'ll never figure out what this command does!' },
+	'lastpi' => { func => sub{}, args => '', help => 'Computes and displays the last digit of pi (asynchronous)' },
+	'workdammit' => { func => \&workdammit, args => '', help => 'Perform ancient invocation ritual' },
+	);
+	
+sub dispatch {
+	my($server, $data, $nick, $mask) = @_;
 	my($target, $text) = $data =~ /^(\S*)\s:(.*)/;
-	
-	if($text =~ m/^!button/i){
-		$server->command("CTCP $target ACTION presses button");
-		my $response = $button[int(rand(scalar(@button)))];
-		$server->command("CTCP $target ACTION $response");
+	my %info;
+	return unless $target =~ /^#/; # channels only
+	$info{directed} = 1 if $text =~ s/^\Q$server->{nick}\E[:,]\s*//;
+	if ($text =~ /^!(\w+)/) {
+		my $command = $dispatch{$1};
+		$info{keyword} = $1;
+		$info{command} = $command;
+		if ($command) {
+			$command->{func}->(\%info, $server, $data, $nick, $mask, $target, $text);
+			$lastnick = $nick unless $command->{nolast};
+		}
 	}
-	
-	if($text =~ m/^!butten/i){
-		$server->command("CTCP $target ACTION corrects spelling");
-		$server->command("CTCP $target ACTION presses button");
-		my $response = $button[int(rand(scalar(@button)))];
-		server->command("CTCP $target ACTION $response");
-	}
-	$lastnick = $nick;
 }
 
-sub identify{
-	my($server, $data, $nick, $mask, $target) = @_;
-	my($target, $text) = $data =~ /^(\S*)\s:(.*)/;
+sub help {
+	my ($info, $server, $data, $nick, $mask, $target, $text) = @_;
+	my (undef, $helpfor) = split ' ', $text;
+	$helpfor ||= 'help';
+	$helpfor =~ s/^!//; # behave intelligently if they do !help !command
+	my $command = $dispatch{$helpfor};
+	unless ($command) {
+		$server->say($target, "I don't have a !$helpfor command.") if $info->{directed};
+		return;
+	}
+	if ($command->{hidden}) {
+		$server->say($target, "Who told you I had a !$helpfor command?");
+		return;
+	}
+	my $help = $command->{help} || 'Do... something.';
+	$server->say($target, "Usage: !$helpfor$command->{args}: $help");
+}
+
+sub workdammit {
+	my ($info, $server, $data, $nick, $mask, $target, $text) = @_;
+	$server->say($target, "No.");
+}
+
+sub button {
+	my ($info, $server, $data, $nick, $mask, $target, $text) = @_;
+	$server->me($target, "presses button");
+	my $response = $button[int(rand(scalar(@button)))];
+	$server->me($target, $response);
+}
+
+sub butten {
+	my ($info, $server, $data, $nick, $mask, $target, $text) = @_;
+	$server->me($target, "corrects spelling");
+	goto &button;
+}
+
+sub identify {
+	my ($info, $server, $data, $nick, $mask, $target, $text) = @_;
 	my $version = "4.2";
 	
-	if ($text =~ m/^!identify/i) {
-		$server->command("MSG $target I am Moberry, a female graham cracker IRC Bot. Version $version");
-		$server->command("MSG $target My commands are as follows:");
-		$server->command("MSG $target !anime <search term>, !button, !g <search term>, !identify, !last, !order, !poke, !smack, !suggest, !whee");
-	}
-	$lastnick = $nick;
-}
-sub last{
-	my($server, $data, $nick, $mask, $target) = @_;
-	my($target, $text) = $data =~ /^(\S*)\s:(.*)/;
-	
-	if ($text =~ m/^!last/i) {
-		$server->command("MSG $target My last command was issued by $lastnick");
-	}
-	$lastnick = $nick;
-}
-sub order{
-	my($server, $data, $nick, $mask, $target) = @_;
-	my($target, $text) = $data =~ /^(\S*)\s:(.*)/;
-	
-	if ($text =~ m/!order/i) {
-		my $response = $order[int(rand(scalar(@order)))];
-		$server->command("MSG $target $response");
-	}
-	$lastnick = $nick;
-}
-sub poke{
-	my($server, $data, $nick, $mask, $target) = @_;
-	my($target, $text) = $data =~ /^(\S*)\s:(.*)/;
-	
-	if($text =~ m/^!poke/i){
-		if($nick eq "bradthebugguy"){
-			$server->command("CTCP $target ACTION hugs $nick");
-		}
-		else{
-			my $response = $poke[int(rand(scalar(@poke)))];
-			$server->command("CTCP $target ACTION $response $nick");
-		}
-	} 
-	$lastnick = $nick;
+	my @commands = sort grep { !$dispatch{$_}{hidden} } keys %dispatch;
+	$server->say($target, "I am $server->{nick}, a female graham cracker IRC Bot. Version $version. Commands (activate with !command): ", join(' ', @commands));
 }
 
-sub smack{
-	my($server, $data, $nick, $mask, $target) = @_;
-	my($target, $text) = $data =~ /^(\S*)\s:(.*)/;
+sub last {
+	my ($info, $server, $data, $nick, $mask, $target, $text) = @_;
 	
-	if($text =~ m/^!smack/i){
-		$server->command("CTCP $target ACTION sobs");
-		$lastnick = $nick;
-	}
-}
-sub suggest{
-	my($server, $data, $nick, $mask, $target) = @_;
-	my($target, $text) = $data =~ /^(\S*)\s:(.*)/;
-	my $phrase = int(rand(3));
-	
-	if ($text =~ m/^!suggest/i) {
-		my $response = $suggest[int(rand(scalar(@suggest)))];
-		$server->command("MSG $target $response");
-		$lastnick = $nick;
-	}
-}
-sub whee{
-	my($server, $data, $nick, $mask, $target) = @_;
-	my($target, $text) = $data =~ /^(\S*)\s:(.*)/;
-	
-	if ($text =~ m/^!whee/i) {
-		$server->command("MSG $target Wheeeee \\*w*/");
-		$lastnick = $nick;
-	}
+	$server->say($target, "My last command was issued by $lastnick");
 }
 
-Irssi::signal_add('event privmsg', 'button');
-Irssi::signal_add('event privmsg', 'identify');
-Irssi::signal_add('event privmsg', 'last');
-Irssi::signal_add('event privmsg', 'order');
-Irssi::signal_add('event privmsg', 'poke');
-Irssi::signal_add('event privmsg', 'smack');
-Irssi::signal_add('event privmsg', 'suggest');
-Irssi::signal_add('event privmsg', 'whee');
+sub order {
+	my ($info, $server, $data, $nick, $mask, $target, $text) = @_;
+
+	my $response = $order[int(rand(scalar(@order)))];
+	$server->say($target,  $response);
+}
+
+sub poke {
+	my ($info, $server, $data, $nick, $mask, $target, $text) = @_;
+
+	my $response;
+	if($nick =~ /^bradthe/i){
+		$response = 'hugs';
+	} else {
+		$response = $poke[int(rand(scalar(@poke)))];
+	}
+	$server->me($target, "$response $nick");
+}
+
+sub smack {
+	my ($info, $server, $data, $nick, $mask, $target, $text) = @_;
+
+	$server->me($target, "sobs");
+}
+
+sub suggest {
+	my ($info, $server, $data, $nick, $mask, $target, $text) = @_;
+
+	my $response = $suggest[int(rand(scalar(@suggest)))];
+	$server->say($target,  $response);
+}
+
+sub whee {
+	my ($info, $server, $data, $nick, $mask, $target, $text) = @_;
+
+	$server->say($target, "Wheeeee \\*w*/");
+}
+
+Irssi::signal_add('event privmsg', \&dispatch);
+
+# add some nifty custom commands to make this stuff more legible
+{ package Irssi::Server;
+  sub me { $_[0]->command("CTCP $_[1] ACTION " . join('', @_[2..$#_])); }
+  sub say { $_[0]->command("MSG $_[1] " . join('', @_[2..$#_])); }
+}
+
