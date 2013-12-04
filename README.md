@@ -1,4 +1,5 @@
-Moberry
+Droplet
 =======
-Moberry is a female graham cracker irc bot that does silly things when poked.
+Droplet is a crappy little bot powered by irssi.
+
 
